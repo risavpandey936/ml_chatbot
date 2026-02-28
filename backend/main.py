@@ -186,7 +186,7 @@ def get_visualizations(file_id: str):
         os.makedirs(plot_dir, exist_ok=True)
         
         saved_files = generate_plots(path, out_dir=plot_dir)
-        plot_urls = [f"http://localhost:8000/plots/{file_id}/{os.path.basename(f)}" for f in saved_files]
+        plot_urls = [f"/plots/{file_id}/{os.path.basename(f)}" for f in saved_files]
         
         return {"plots": plot_urls}
     except Exception as e:
@@ -203,7 +203,7 @@ def visualize_custom(file_id: str, col1: str = Form(...), plot_type: str = Form(
         
         saved_file = generate_single_plot(path, plot_type, col1, col2, out_dir=plot_dir)
         if saved_file:
-            plot_url = f"http://localhost:8000/plots/{file_id}/{os.path.basename(saved_file)}"
+            plot_url = f"/plots/{file_id}/{os.path.basename(saved_file)}"
             return {"plot": plot_url}
         else:
             raise HTTPException(status_code=400, detail="Invalid plot configuration or generation failed.")

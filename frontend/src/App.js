@@ -129,7 +129,7 @@ function App() {
     setLoading(true);
     try {
       const res = await axios.post(`${API_BASE}/visualize/${fileId}`);
-      setVisualizationRes(res.data.plots || []);
+      setVisualizationRes((res.data.plots || []).map(url => `${API_BASE}${url}`));
       setCurrentStep('refinement');
       if (activeColumns.length > 0) {
         setCustomCol1(activeColumns[0]);
@@ -154,7 +154,7 @@ function App() {
         fd.append('col2', customCol2);
       }
       const res = await axios.post(`${API_BASE}/visualize-custom/${fileId}`, fd);
-      setCustomPlotUrl(res.data.plot);
+      setCustomPlotUrl(`${API_BASE}${res.data.plot}`);
     } catch (e) {
       console.error(e);
       alert('Failed to generate custom plot. Ensure the column type matches the plot type.');
