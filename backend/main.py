@@ -31,9 +31,9 @@ def _sanitize(obj):
     return obj
 app = FastAPI()
 
-static_dir = os.path.join(os.path.dirname(__file__), 'static')
-os.makedirs(static_dir, exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+plots_dir = os.path.join(os.path.dirname(__file__), 'plots')
+os.makedirs(plots_dir, exist_ok=True)
+app.mount("/plots", StaticFiles(directory=plots_dir), name="plots")
 
 # Allow requests from the frontend dev server
 app.add_middleware(
@@ -182,11 +182,11 @@ def get_visualizations(file_id: str):
         from pipeline.eda import generate_plots
         path = _resolve_path(file_id)
         
-        plot_dir = os.path.join(static_dir, file_id)
+        plot_dir = os.path.join(plots_dir, file_id)
         os.makedirs(plot_dir, exist_ok=True)
         
         saved_files = generate_plots(path, out_dir=plot_dir)
-        plot_urls = [f"http://localhost:8000/static/{file_id}/{os.path.basename(f)}" for f in saved_files]
+        plot_urls = [f"http://localhost:8000/plots/{file_id}/{os.path.basename(f)}" for f in saved_files]
         
         return {"plots": plot_urls}
     except Exception as e:
@@ -198,12 +198,12 @@ def visualize_custom(file_id: str, col1: str = Form(...), plot_type: str = Form(
         from pipeline.eda import generate_single_plot
         path = _resolve_path(file_id)
         
-        plot_dir = os.path.join(static_dir, file_id)
+        plot_dir = os.path.join(plots_dir, file_id)
         os.makedirs(plot_dir, exist_ok=True)
         
         saved_file = generate_single_plot(path, plot_type, col1, col2, out_dir=plot_dir)
         if saved_file:
-            plot_url = f"http://localhost:8000/static/{file_id}/{os.path.basename(saved_file)}"
+            plot_url = f"http://localhost:8000/plots/{file_id}/{os.path.basename(saved_file)}"
             return {"plot": plot_url}
         else:
             raise HTTPException(status_code=400, detail="Invalid plot configuration or generation failed.")
@@ -251,12 +251,17 @@ def hypothesis_endpoint(file_id: str, column: str = Form(...), test: str = Form(
 from starlette.responses import FileResponse
 frontend_build_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
 
-if os.path.exists(frontend_build_dir):
-    app.mount("/", StaticFiles(directory=frontend_build_dir, html=True), name="frontend")
-else:
-    @app.get("/")
-    def serve_react_app():
-        return {"message": "API is running. Frontend build not found."}
+# Mount the frontend React static files over /static
+frontend_static_dir = os.path.join(frontend_build_dir, 'static')
+if os.path.exists(frontend_static_dir):
+    app.mount("/static", StaticFiles(directory=frontend_static_dir), name="frontend_static")
+
+@app.get("/{full_path:path}")
+def serve_react_app(full_path: str):
+    index_path = os.path.join(frontend_build_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {"message": "API is running. Frontend build not found."}
 
 if __name__ == '__main__':
     import uvicorn
