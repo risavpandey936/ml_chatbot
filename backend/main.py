@@ -260,7 +260,7 @@ if os.path.exists(frontend_static_dir):
 def serve_react_app(full_path: str):
     index_path = os.path.join(frontend_build_dir, "index.html")
     if os.path.exists(index_path):
-        return FileResponse(index_path)
+        return FileResponse(index_path, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
     return {"message": "API is running. Frontend build not found."}
 
 if __name__ == '__main__':
