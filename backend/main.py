@@ -47,10 +47,6 @@ app.add_middleware(
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Mount frontend build directory specifically over / to serve index.html
-from starlette.responses import FileResponse
-frontend_build_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
-
 @app.get("/")
 def serve_react_app():
     if os.path.exists(os.path.join(frontend_build_dir, "index.html")):
@@ -251,9 +247,16 @@ def hypothesis_endpoint(file_id: str, column: str = Form(...), test: str = Form(
 
 # Chat/LLM endpoint removed — backend only exposes dataset/eda/train/hypothesis endpoints
 
-# Mount the static files from React build to the root to serve css/js
+# Mount frontend build directory specifically over / to serve index.html
+from starlette.responses import FileResponse
+frontend_build_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'build')
+
 if os.path.exists(frontend_build_dir):
-    app.mount("/", StaticFiles(directory=frontend_build_dir), name="frontend")
+    app.mount("/", StaticFiles(directory=frontend_build_dir, html=True), name="frontend")
+else:
+    @app.get("/")
+    def serve_react_app():
+        return {"message": "API is running. Frontend build not found."}
 
 if __name__ == '__main__':
     import uvicorn
