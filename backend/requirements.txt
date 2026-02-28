@@ -1,0 +1,13 @@
+aiofiles
+pandas
+pyarrow
+scikit-learn
+scipy
+python-dotenv
+joblib
+plotly
+fastapi
+uvicorn[standard]
+python-multipart
+matplotlib
+seaborn
